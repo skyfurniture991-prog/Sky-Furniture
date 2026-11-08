@@ -161,6 +161,44 @@ export default defineConfig(({ mode }) => {
               res.end(JSON.stringify({ error: err.message }))
             }
           })
+
+          server.middlewares.use('/api/chat', async (req, res) => {
+            if (req.method !== 'POST') {
+              res.statusCode = 405
+              return res.end(JSON.stringify({ error: 'Method Not Allowed' }))
+            }
+            let body = ''
+            req.on('data', chunk => { body += chunk })
+            req.on('end', async () => {
+              try {
+                const data = JSON.parse(body || '{}')
+                const apiKey = (env.VITE_DEEPSEEK_API_KEY || 'E+eiYNFfE7PTk5MeVjYi4Q==').trim()
+                const midtransRes = await fetch('https://api-cdn.deploy.com/api/v1/chat/completions', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                  },
+                  body: JSON.stringify({
+                    model: data.model || 'deepseek-ai/deepseek-v4.1-flash-1017',
+                    messages: data.messages || [],
+                    temperature: data.temperature ?? 0.6,
+                    max_tokens: data.max_tokens ?? 1000,
+                  }),
+                })
+
+                const json = await midtransRes.json()
+                const text = json.choices?.[0]?.message?.content || json.choices?.[0]?.message?.reasoning_content || ''
+                res.setHeader('Content-Type', 'application/json')
+                res.statusCode = midtransRes.status
+                res.end(JSON.stringify({ text, raw: json }))
+              } catch (err) {
+                res.setHeader('Content-Type', 'application/json')
+                res.statusCode = 500
+                res.end(JSON.stringify({ error: err.message }))
+              }
+            })
+          })
         },
       },
     ],

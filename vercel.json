@@ -2,12 +2,8 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/api/midtrans/token",
-      "destination": "/api/midtrans/token"
-    },
-    {
-      "source": "/api/midtrans/status",
-      "destination": "/api/midtrans/status"
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     },
     {
       "source": "/(.*)",
@@ -15,4 +11,3 @@
     }
   ]
 }
-

@@ -24,20 +24,46 @@ const DEPLOY_ENDPOINTS = [
 export async function sendChatMessage(messages, customApiKey = "") {
   const envKey = (import.meta.env.VITE_DEEPSEEK_API_KEY || "").trim();
   const apiKey = (customApiKey || envKey).trim();
+  const systemPrompt = buildSkyBotSystemPrompt();
 
+  const fullMessages = [
+    { role: "system", content: systemPrompt },
+    ...messages,
+  ];
+
+  // 1. Coba panggil Serverless API /api/chat (Bebas CORS di Vercel & Vite)
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messages: fullMessages,
+        max_tokens: 1000,
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const text = data?.text || "";
+      if (text) {
+        return { text, isFallback: false };
+      }
+    }
+  } catch (err) {
+    console.warn("Gagal menghubungi /api/chat:", err);
+  }
+
+  // 2. Fallback direct target jika diakses di luar browser/proxy
   if (apiKey) {
-    const systemPrompt = buildSkyBotSystemPrompt();
-
     for (const target of DEPLOY_ENDPOINTS) {
       try {
         const payload = {
           model: target.model,
-          messages: [
-            { role: "system", content: systemPrompt },
-            ...messages,
-          ],
+          messages: fullMessages,
           temperature: 0.6,
-          max_tokens: 800,
+          max_tokens: 1000,
         };
 
         const res = await fetch(target.url, {
@@ -51,17 +77,19 @@ export async function sendChatMessage(messages, customApiKey = "") {
 
         if (res.ok) {
           const data = await res.json();
-          const text = data?.choices?.[0]?.message?.content || "";
+          const text =
+            data?.choices?.[0]?.message?.content ||
+            data?.choices?.[0]?.message?.reasoning_content ||
+            "";
           if (text) return { text, isFallback: false };
         }
       } catch (err) {
-        // Coba endpoint berikutnya
         console.warn(`Gagal memanggil ${target.url}:`, err);
       }
     }
   }
 
-  // Jika semua endpoint gagal atau belum ada key
+  // 3. Fallback cerdas katalog lokal jika offline/kuota habis
   return generateSmartFallback(
     messages,
     !apiKey ? "API Key belum dikonfigurasi. Berjalan dengan basis data lokal Sky Furniture." : undefined
@@ -114,7 +142,14 @@ Semua sofa L kami bisa request posisi sudut kiri atau kanan tanpa biaya tambahan
     const turki = PRODUCTS.find((p) => p.category === "turki");
     reply = `👑 **Sofa Turki 321 Luxury (Sultan Suite):**
 ${turki ? `- **[${turki.name}](/produk/${turki.slug})** — ${formatPrice(turki.price)}\nSet lengkap 321 dengan sandaran mahkota tinggi, ukiran mahoni Jepara, tufted kancing kristal, dan meja tamu marmer kaca tempered.` : "Set sofa ruang tamu mewah dengan kain beludru velvet dan aksen gold."}`;
-  } else if (/rekomendasi|pilihan|murah|budget|best seller|favorit/i.test(lastUserMsg)) {
+  } else if (/minimalis|ruang tamu|apartemen/i.test(lastUserMsg)) {
+    reply = `🛋️ **Rekomendasi Sofa Minimalis untuk Ruang Tamu:**
+1. **[Sofa Retro 3 Seater](/produk/sofa-retro-3-seater)** (${formatPrice(1895000)}) — Desain Scandinavian minimalis, hemat ruang dengan kaki kayu Mahoni solid natural. Sangat cocok untuk ruang tamu bernuansa modern & hangat.
+2. **[Sofa L Beranak](/produk/sofa-l-beranak)** (${formatPrice(3565000)}) — Pilihan tepat jika ingin santai bersama keluarga tanpa memakan tempat. Meja puff kecil bisa dimasukkan rapi di bawah sofa!
+3. **[Sofa Retro 2 Seater](/produk/sofa-retro-2-seater)** (${formatPrice(1450000)}) — Model kompak 2 tempat duduk yang ramping dan estetik.
+
+💡 *Tips:* Untuk ruang tamu minimalis, pilih kain warna netral seperti *Biru Horizon*, *Misty Gray*, atau *Broken White* agar ruangan terasa lebih lega dan terang!`;
+  } else if (/rekomendasi|pilihan|murah|budget|best seller|favorit|saran|butuh|perlu/i.test(lastUserMsg)) {
     const top = PRODUCTS.filter((p) => p.featured).slice(0, 4);
     reply = `⭐ **Rekomendasi Terbaik dari Workshop Sky Furniture:**
 ${top.map((p) => `- **[${p.name}](/produk/${p.slug})** — **${formatPrice(p.price)}** (${p.badge?.text || "Pilihan Terlaris"})`).join("\n")}
