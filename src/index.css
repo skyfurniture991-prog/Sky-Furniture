@@ -1,0 +1,226 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scrollbar-gutter: stable;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background font-sans text-on-background antialiased;
+    font-size: 15px;
+    line-height: 24px;
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+
+  ::selection {
+    @apply bg-primary-container text-on-primary;
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--c-primary-container));
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+  }
+
+  img {
+    @apply select-none;
+  }
+
+  /* Hilangkan panah input number */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+@layer components {
+  /* Kolom input standar */
+  .field {
+    @apply w-full rounded-lg border border-outline-variant/70 bg-surface-container-lowest px-4 py-2.5 text-body-md text-on-surface transition-all placeholder:text-outline/70;
+  }
+  .field:hover {
+    @apply border-outline;
+  }
+  .field:focus {
+    @apply border-primary-container ring-4 ring-primary-container/15;
+  }
+  .field-error {
+    @apply border-error ring-4 ring-error/10;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 font-label-lg text-label-lg transition-all duration-200 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn bg-primary-container text-on-primary shadow-soft hover:bg-primary hover:shadow-glow;
+  }
+  .btn-secondary {
+    @apply btn border border-outline-variant bg-surface-container-lowest text-on-surface hover:border-primary-container hover:text-primary;
+  }
+  .btn-tonal {
+    @apply btn bg-surface-container text-primary hover:bg-surface-container-high;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-outline-variant/60 bg-surface-container-lowest px-3.5 py-1.5 text-label-md font-label-md text-on-surface-variant transition-all hover:border-primary-container hover:text-primary;
+  }
+  .chip-active {
+    @apply border-primary-container bg-primary-container text-on-primary hover:text-on-primary;
+  }
+
+  .container-page {
+    @apply mx-auto w-full max-w-[1440px] px-6 lg:px-14;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 font-label-sm text-label-sm uppercase tracking-[0.16em] text-primary;
+  }
+
+  .glass {
+    @apply border border-outline-variant/40 bg-surface-container-lowest/75 backdrop-blur-xl;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Material Symbols */
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+  font-size: 24px;
+}
+
+/* Skeleton shimmer */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgb(var(--c-surface-container));
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(var(--c-surface-container-lowest) / 0.7), transparent);
+  animation: shimmer 1.4s infinite;
+}
+
+/* Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 4px;
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgb(var(--c-outline-variant));
+  border-radius: 4px;
+}
+
+/* Range slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: rgb(var(--c-surface-container-high));
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 9999px;
+  background: rgb(var(--c-primary-container));
+  border: 3px solid rgb(var(--c-surface-container-lowest));
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+  cursor: grab;
+  transition: transform 0.15s;
+}
+input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.2);
+  cursor: grabbing;
+}
+input[type="range"]::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 9999px;
+  background: rgb(var(--c-primary-container));
+  border: 3px solid rgb(var(--c-surface-container-lowest));
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+  cursor: grab;
+}
+
+/* Lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+/* Marquee */
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 40s linear infinite;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Pola titik dekoratif */
+.dots-bg {
+  background-image: radial-gradient(rgb(var(--c-outline-variant) / 0.7) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Hormati preferensi kurangi gerak */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Cetak: sembunyikan elemen navigasi */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
